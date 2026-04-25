@@ -26,8 +26,8 @@ func Load() *Configuration {
 	viper.AutomaticEnv()
 
 	viper.SetDefault("PORT", "3000")
-	viper.SetDefault("MAX_FILE_SIZE_MB", "100")
-	viper.SetDefault("MAX_RETRIES", "3")
+	viper.SetDefault("MAX_FILE_SIZE_MB", 100)
+	viper.SetDefault("MAX_RETRIES", 3)
 
 	// log.Println("DB_URL:", viper.GetString("DB_URL"))
 
@@ -37,11 +37,11 @@ func Load() *Configuration {
 		log.Println("No .env file found, using defaults")
 	}
 
-	var cfg Configuration
-	log.Println("DB_URL AFTER READ:", viper.GetString("DB_URL"))
-	if err := viper.Unmarshal(&cfg); err != nil {
-		log.Fatalf("unable to decode into struct : %v", err)
-	}
+		var cfg Configuration
+		log.Println("DB_URL AFTER READ:", viper.GetString("DB_URL"))
+		if err := viper.Unmarshal(&cfg); err != nil {
+			log.Fatalf("unable to decode into struct : %v", err)
+		}
 
 	if cfg.AWSAccessKey == "" || cfg.AWSRegion == "" || cfg.AWSSecretKey == "" {
 		log.Fatal("missing required aws credentials")

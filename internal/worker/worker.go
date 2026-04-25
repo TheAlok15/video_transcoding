@@ -38,7 +38,7 @@ func (w *Worker) run(workerID int) {
 	msgs, err := ch.Consume(
 		"transcode_queue",
 		"",
-		false, // manual ack
+		false, // manual ack => job is removed only after successfuly processing, worker must manually confirm 
 		false,
 		false,
 		false,

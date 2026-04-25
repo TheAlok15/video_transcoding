@@ -31,9 +31,16 @@ func NewRabbitMQ(cfg *configuration.Configuration) (*RabbitMQ, error) {
 	// i use Quorum queue for reliability
 	_, err = ch.QueueDeclare(
 		"transcode_queue",
-		true,   // durable
+		true,   // durable queue survive even if rmq restart it stores in disk not only in ram
 		false,  // autoDelete => means it should not be delete automatically when not in use
-		false,  // exclusive => 
+		false,  // exclusive => Queue is NOT restricted to one connection If true:
+// Only one connection can access queue
+// Why you set false:
+
+// Because:
+
+// multiple workers
+// multiple consumers
 		false,  // no wait
 		amqp091.Table{
 			amqp091.QueueTypeArg: amqp091.QueueTypeQuorum,
@@ -71,7 +78,7 @@ func (r *RabbitMQ) PublishJob(jobID string) error {
 		amqp091.Publishing{
 			ContentType:  "text/plain",
 			Body:         []byte(jobID),
-			DeliveryMode: amqp091.Persistent,
+			DeliveryMode: amqp091.Persistent, //so messages are not lost if RabbitMQ crashes
 		},
 	)
 	if err != nil {

@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_MODE: ci   # 🔥 this is what we prepared earlier
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Build
+        run: go build ./cmd/main.go
+
+      - name: Run tests
+        run: go test ./...

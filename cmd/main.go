@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/TheAlok15/video_transcoding/internal/configuration"
 	"github.com/TheAlok15/video_transcoding/internal/database"
@@ -14,6 +15,10 @@ import (
 )
 
 func main() {
+
+	mode := os.Getenv("APP_MODE")
+
+	if mode != "ci"{
 
 	cfg := configuration.Load()
 
@@ -35,6 +40,10 @@ func main() {
 
 	worker := worker.NewWorker(rabbitMQ, database.DB, cfg)
 	worker.Start(5)
+	if mode == "ci" {
+    log.Println("Running in CI mode - skipping server start")
+    return
+}
 	router := gin.Default()
 	h := &handler.Handler{
 		RabbitMQ:  rabbitMQ,
@@ -53,5 +62,9 @@ func main() {
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatal(err)
 	}
+		
+	}
+
+	
 
 }
