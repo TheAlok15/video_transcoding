@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      APP_MODE: ci   # 🔥 this is what we prepared earlier
+      APP_MODE: ci 
 
     steps:
       - name: Checkout code
