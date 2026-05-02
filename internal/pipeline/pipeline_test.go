@@ -10,7 +10,7 @@ import (
 func TestPipelineStructure(t *testing.T) {
 	cfg := &configuration.Configuration{}
 
-	p := NewPipeline(cfg)
+	p := NewPipeline(cfg, nil)
 
 	if p.decoder == nil || p.processor == nil || p.encoder == nil {
 		t.Fatal("pipeline not initialized properly")

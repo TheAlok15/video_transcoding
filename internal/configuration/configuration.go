@@ -18,6 +18,9 @@ type Configuration struct {
 	MaxFileSizeMB  int    `mapstructure:"MAX_FILE_SIZE_MB"`
 	LogLevel       string `mapstructure:"LOG_LEVEL"`
 	MaxRetries     int    `mapstructure:"MAX_RETRIES"`
+	MaxMessages    int    `mapstructure:"MAX_MESSAGES"`
+	WaitTime       int    `mapstructure:"WAIT_TIME"`
+	SQSQueueURL string `mapstructure:"SQS_QUEUE_URL"`
 }
 
 func Load() *Configuration {
@@ -37,11 +40,11 @@ func Load() *Configuration {
 		log.Println("No .env file found, using defaults")
 	}
 
-		var cfg Configuration
-		log.Println("DB_URL AFTER READ:", viper.GetString("DB_URL"))
-		if err := viper.Unmarshal(&cfg); err != nil {
-			log.Fatalf("unable to decode into struct : %v", err)
-		}
+	var cfg Configuration
+	log.Println("DB_URL AFTER READ:", viper.GetString("DB_URL"))
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("unable to decode into struct : %v", err)
+	}
 
 	if cfg.AWSAccessKey == "" || cfg.AWSRegion == "" || cfg.AWSSecretKey == "" {
 		log.Fatal("missing required aws credentials")

@@ -42,7 +42,7 @@ func NewEncoder(cfg *configuration.Configuration) *Encoder {
 	}
 }
 
-func (e *Encoder) EncodeAndUpload(job *model.Job) error {
+func (e *Encoder) EncodeAndUpload(job *model.Job, file string) error {
 	log.Printf(" encoding 3 resolutions for job %s", job.ID)
 
 	outputDir := "./outputs"

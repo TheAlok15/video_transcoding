@@ -1,11 +1,9 @@
-// internal/transcoder/processor.go
 package transcoder
 
 import (
 	"fmt"
 	"log"
 	"os"
-
 	"github.com/TheAlok15/video_transcoding/internal/model"
 
 )
@@ -16,7 +14,7 @@ func NewProcessor() *Processor {
 	return &Processor{}
 }
 
-func (p *Processor) Process(job *model.Job) error {
+func (p *Processor) Process(job *model.Job, file string) error {
 	log.Printf("processing (resizing) job %s", job.ID)
 
 	// Create temp directory for intermediate files

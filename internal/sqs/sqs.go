@@ -10,6 +10,7 @@ import (
 	"github.com/TheAlok15/video_transcoding/internal/model"
 	"github.com/TheAlok15/video_transcoding/internal/rabbitmq"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
@@ -31,7 +32,14 @@ type S3Event struct {
 
 func NewSQSClient(queueURL string, cfg *configuration.Configuration) (*Consumer, error) {
 
-	sqsClient, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(cfg.AWSRegion))
+	sqsClient, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(cfg.AWSRegion), config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+
+		cfg.AWSAccessKey,
+        cfg.AWSSecretKey,
+    	"",
+	),
+			
+	),)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +52,7 @@ func NewSQSClient(queueURL string, cfg *configuration.Configuration) (*Consumer,
 
 func (c *Consumer) GetMessages(cf *configuration.Configuration, rabbit *rabbitmq.RabbitMQ) {
 
+	semaphore := make(chan struct{}, 8)
 	// var messages []types.Message
 	for {
 
@@ -54,16 +63,78 @@ func (c *Consumer) GetMessages(cf *configuration.Configuration, rabbit *rabbitmq
 		})
 		if err != nil {
 			log.Printf("Couldn't get messages from queue %v. Here's why: %v\n", c.QueueURL, err)
+			continue
 		}
 
 		for _, msg := range result.Messages {
-			go c.processMessage(msg, rabbit)
+			// go c.processMessage(msg, rabbit)
 
+			semaphore <- struct{}{} // take slot
+
+			go func(m types.Message) {
+				defer func() {
+					<-semaphore // release slot
+				}()
+
+				c.processMessage(m, rabbit)
+
+			}(msg)
 		}
 
 	}
 
 }
+
+// func (c *Consumer) processMessage(msg types.Message, rabbit *rabbitmq.RabbitMQ,) {
+
+// 	var event S3Event
+
+// 	err := json.Unmarshal([]byte(*msg.Body), &event)
+// 	if err != nil {
+// 		log.Println("invalid message:", err)
+// 		return
+// 	}
+
+// 	if len(event.Records) == 0 {
+// 		return
+// 	}
+
+// 	key := event.Records[0].S3.Object.Key
+// 	log.Println("received key:", key)
+
+// 	// find job
+// 	var job model.Job
+// 	err = database.DB.First(&job, "input_url = ?", key).Error
+// 	if err != nil {
+// 		log.Println("job not found:", key)
+// 		return
+// 	}
+
+// 	// avoid duplicate
+// 	if job.Status != "uploading" {
+// 		log.Println("already processed:", job.ID)
+// 		return
+// 	}
+
+// 	// update status
+// 	job.Status = "pending"
+// 	database.DB.Save(&job)
+
+// 	err = rabbit.PublishJob(job.ID)
+// 	if err != nil {
+// 		log.Println("rabbit publish failed:", err)
+// 		return
+// 	}
+
+// 	// delete message
+// 	_, err = c.SQSClient.DeleteMessage(context.TODO(), &sqs.DeleteMessageInput{
+// 		QueueUrl:      &c.QueueURL,
+// 		ReceiptHandle: msg.ReceiptHandle,
+// 	})
+// 	if err != nil {
+// 		log.Println("delete failed:", err)
+// 	}
+// }
 
 func (c *Consumer) processMessage(msg types.Message, rabbit *rabbitmq.RabbitMQ) {
 
