@@ -66,7 +66,7 @@ func (e *Encoder) EncodeAndUpload(job *model.Job, file string) error {
 		err := exec.Command(
 			"ffmpeg",
 			"-y",
-			"-i", job.InputURL,
+			"-i", file,
 			"-vf", fmt.Sprintf(
 				"scale=w=%d:h=%d:force_original_aspect_ratio=decrease,pad=%d:%d:(ow-iw)/2:(oh-ih)/2",
 				res.width, res.height, res.width, res.height,
